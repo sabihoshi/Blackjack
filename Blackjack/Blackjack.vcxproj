@@ -18,6 +18,21 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Blackjack.cpp" />
+    <ClCompile Include="src\Card.cpp" />
+    <ClCompile Include="src\Console.cpp" />
+    <ClCompile Include="src\Dealer.cpp" />
+    <ClCompile Include="src\Player.cpp" />
+    <ClCompile Include="src\Table.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Card.h" />
+    <ClInclude Include="src\Console.h" />
+    <ClInclude Include="src\Dealer.h" />
+    <ClInclude Include="src\Player.h" />
+    <ClInclude Include="src\Table.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -116,6 +131,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -138,9 +154,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="Blackjack.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
