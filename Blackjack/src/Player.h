@@ -1,13 +1,13 @@
 #pragma once
 
-#include <vector>
-#include "Card.h"
+#include <iostream>
+
 #include "Console.h"
+#include "Hand.h"
 
 enum class PlayerState
 {
 	Normal,
-	Blackjack,
 	Bust,
 	Stand
 };
@@ -18,26 +18,31 @@ enum class GameAction
 	Hit,
 	Stand,
 	Double,
-	Reveal
+	Reveal,
+	Split,
+	Insurance
 };
 
 class Player
 {
 public:
-	explicit Player(std::string name);
+	explicit Player(std::string name, CursorDirection direction = CursorDirection::Right);
 
-	std::vector<Card> Cards;
+	Hand FirstHand;
+	Hand SecondHand;
 	int Chips = 0;
-	int Bet = 0;
+	int Insurance = 0;
+	bool Insured = false;
+	bool CanInsurance = false;
+	bool Split = false;
 	bool CanHit = true;
 	bool CanSplit = false;
-	bool HasAce = false;
-	int CardTotal;
-	PlayerState State;
+	bool CanDouble = false;
+	bool IsFirstHand = true;
 
-	void UpdateState(GameAction action = GameAction::None);
+	PlayerState State = PlayerState::Normal;
 
-	void Double();
+	void ResetState();
 
 	template <typename T>
 	T Prompt(const std::string& prompt)
@@ -56,7 +61,7 @@ public:
 			std::cin >> input;
 
 			if (!std::cin)
-				cinReset();
+				CinReset();
 
 			return input;
 		}
@@ -66,6 +71,8 @@ public:
 
 	void PromptBet();
 
+	void PromptInsurance();
+
 	GameAction PromptAction(const std::string& prompt) const;
 
 	CursorDirection Direction;
@@ -74,17 +81,19 @@ public:
 	COORD TotalXY{0, 0};
 	COORD PromptXY{0, 0};
 	COORD ChipsXY{0, 0};
-protected:
-	explicit Player(CursorDirection direction);
 
-private:
-	void PrintCards();
+	Hand& GetCurrentCollection();
 
 	void PrintChips() const;
 
+	void PrintCards() const;
+
 	void PrintAction(GameAction action) const;
 
-	int CountTotal() const;
+private:
+	void ClearCards() const;
+
+	void PrintCards(const Hand& hand, int maxWidth, COORD position) const;
 
 	static GameAction GetAction(char c);
 

@@ -1,99 +1,212 @@
-#pragma once
-
 #include "Player.h"
+
+#include <conio.h>
+#include <iostream>
 #include <utility>
 
-// TODO
-void Player::Double() {}
+#include "Table.h"
 
-void Player::PrintCards()
+/**
+ * \brief Gets the current active collection useful for when the hand is split.
+ * \return The hand that should be used.
+ */
+Hand& Player::GetCurrentCollection()
+{
+	if (!Split) return FirstHand;
+	return IsFirstHand ? FirstHand : SecondHand;
+}
+
+/**
+ * \brief Blanks the cards that is seen on the screen.
+ */
+void Player::ClearCards() const
 {
 	XY(CardsXY);
-	for (auto& i : Cards)
+	for (int c = 0; c < MAX_CARDS; c++)
 	{
 		const auto p = XY();
-		i.PrintCard();
+		for (int h = 0; h < Card::CARD_HEIGHT; h++)
+		{
+			WriteLine(Repeat(" ", Card::CARD_WIDTH));
+		}
 		XY(p);
 
 		MoveCursor(Direction, Card::CARD_WIDTH);
 	}
-
-	XY(TotalXY);
-	std::cout << Name << "'s total is " << CountTotal();
 }
 
+/**
+ * \brief Prints the cards of the user.
+ * \param hand The hand to print.
+ * \param maxWidth The max width that the cards can occupy.
+ * \param position The coordinates that the cards will start to print.
+ */
+void Player::PrintCards(const Hand& hand, const int maxWidth, const COORD position) const
+{
+	auto& cards = hand.Cards;
+	const unsigned long long count = cards.size();
+	if (count == 0) return;
+
+	const unsigned long long cardWidth = count * Card::CARD_WIDTH;
+	const unsigned long long width = min(maxWidth, cardWidth);
+	unsigned long long jump = width / count;
+
+	if (jump * (count - 1) + Card::CARD_WIDTH > MAX_WIDTH)
+		jump--;
+
+	XY(position);
+	for (auto& card : cards)
+	{
+		const auto p = XY();
+		card.PrintCard();
+		XY(p);
+
+		MoveCursor(Direction, static_cast<short>(jump));
+	}
+
+	XY(position);
+	MoveCursor(CursorDirection::Down, Card::CARD_HEIGHT);
+
+	if (Direction == CursorDirection::Left)
+		MoveCursor(Direction, Card::CARD_WIDTH);
+
+	std::cout << "Total: " << hand.CountTotal()
+		<< " | " << "Bet: " << hand.Bet;
+}
+
+/**
+ * \brief Prints all of the active hands that the user has.
+ */
+void Player::PrintCards() const
+{
+	ClearCards();
+
+	if (Split)
+	{
+		constexpr int width = MAX_WIDTH / 3;
+		const auto x = static_cast<short>(CardsXY.X + MAX_WIDTH / 2);
+		PrintCards(FirstHand, width, CardsXY);
+		PrintCards(SecondHand, width, {x, CardsXY.Y});
+	}
+	else
+	{
+		PrintCards(FirstHand, MAX_WIDTH, CardsXY);
+	}
+}
+
+/**
+ * \brief Prints the chips the user has.
+ */
 void Player::PrintChips() const
 {
-	if (ChipsXY.X == 0 && ChipsXY.Y == 0)
+	if (Chips == 0)
 		return;
 
 	XY(ChipsXY);
 	std::cout << Repeat(" ", 52);
 
 	XY(ChipsXY);
-	std::cout << "Chips: " << Chips
-		<< " | " << "Bet: " << Bet;
+	std::cout << "Chips: " << Chips;
+
+	if (Insured) std::cout << " | Insurance: " << Insurance;
 }
 
-int Player::CountTotal() const
+/**
+ * \brief Creates a Player object.
+ * \param name The name of the player.
+ * \param direction The direction in which the cards will print.
+ */
+Player::Player(std::string name, const CursorDirection direction) : Direction(direction), Name(std::move(name))
 {
-	int total = 0;
-	for (const auto& card : Cards)
-	{
-		if (!card.IsHidden)
-			total += card.Value;
-	}
-	return HasAce && total + 10 < 21 ? total + 10 : total;
-}
-
-Player::Player(const CursorDirection direction) : Direction(direction) { }
-
-Player::Player(std::string name) : Player(CursorDirection::Right)
-{
-	Name = std::move(name);
-
 	CardsXY = {4, 6};
 	TotalXY = {4, 16};
 	PromptXY = {4, 18};
 	ChipsXY = {4, 21};
 }
 
-void Player::PromptBet()
+/**
+ * \brief Resets the state of the player.
+ */
+void Player::ResetState()
 {
-	Bet = Prompt<int>("How much do you want to bet?");
-	Chips -= Bet;
+	State = PlayerState::Normal;
 
-	UpdateState();
+	IsFirstHand = true;
+	Split = false;
+
+	Insured = false;
+	Insurance = 0;
+	CanInsurance = false;
+
+	CanHit = true;
+	CanSplit = false;
+	CanDouble = false;
+
+	FirstHand.Reset();
+	SecondHand.Reset();
 }
 
+/**
+ * \brief Prompts the user for the amount of bet.
+ */
+void Player::PromptBet()
+{
+	const int bet = Prompt<int>("How much do you want to bet?");
+	Chips -= bet;
+
+	FirstHand.Bet = bet;
+}
+
+/**
+ * \brief Prompts the user for the amount of insurance.
+ */
+void Player::PromptInsurance()
+{
+	if (Chips == 0)
+		return;
+
+	while (true)
+	{
+		const int bet = Prompt<int>("How much do you want to insure?");
+		if (bet > 0 && bet <= FirstHand.Bet / 2)
+		{
+			Insured = true;
+			Insurance = bet;
+			Chips -= bet;
+			break;
+		}
+	}
+}
+
+/**
+ * \brief Prompts the user of the action to take.
+ * \param prompt The prompt message.
+ * \return A GameAction containing the action the user chose.
+ */
 GameAction Player::PromptAction(const std::string& prompt) const
 {
 	while (true)
 	{
 		XY(PromptXY);
+		WriteLine(Repeat(" ", 52));
+		WriteLine(Repeat(" ", 52));
 
-		const auto xy = WriteLine(prompt);
-		WriteLine(Repeat(" ", 54) + "║  ║" + Repeat(" ", 57) + "║");
-
-		XY(xy);
+		XY(PromptXY);
+		WriteLine(prompt);
 		std::cout << "~> ";
 
-		char c;
-		std::cin >> c;
-
-		if (!std::cin)
-		{
-			cinReset();
-		}
-		else
-		{
-			const auto action = GetAction(c);
-			if (action != GameAction::None)
-				return action;
-		}
+		const char c = _getch();
+		const auto action = GetAction(c);
+		if (action != GameAction::None)
+			return action;
 	}
 }
 
+/**
+ * \brief A string representation of the action that is pluralized.
+ * \param action The action the user took.
+ * \return The string containing the action.
+ */
 std::string Player::ActionString(const GameAction action)
 {
 	switch (action)
@@ -102,30 +215,34 @@ std::string Player::ActionString(const GameAction action)
 		case GameAction::Stand: return "Stands";
 		case GameAction::Double: return "Doubles";
 		case GameAction::Reveal: return "Reveals";
+		case GameAction::Split: return "Splits";
+		case GameAction::Insurance: return "Insures";
 		default: return {};
 	}
 }
 
+/**
+ * \brief Converts a character input into a GameAction.
+ * \param c The character input.
+ * \return A GameAction that the user has taken.
+ */
 GameAction Player::GetAction(const char c)
 {
 	switch (c)
 	{
-		case 'h':
-		case 'H': return GameAction::Hit;
-		case 's':
-		case 'S': return GameAction::Stand;
-		case 'd':
-		case 'D': return GameAction::Double;
+		case 'h': return GameAction::Hit;
+		case 's': return GameAction::Stand;
+		case 'd': return GameAction::Double;
+		case 'p': return GameAction::Split;
+		case 'i': return GameAction::Insurance;
 		default: return GameAction::None;
 	}
 }
 
-void Player::Stand()
-{
-	State = PlayerState::Stand;
-	UpdateState(GameAction::Stand);
-}
-
+/**
+ * \brief Prints the action that the user took on the console.
+ * \param action The GameAction that the user took.
+ */
 void Player::PrintAction(const GameAction action) const
 {
 	XY(PromptXY);
@@ -133,21 +250,4 @@ void Player::PrintAction(const GameAction action) const
 
 	XY(PromptXY);
 	std::cout << Name << " " << ActionString(action);
-}
-
-void Player::UpdateState(const GameAction action)
-{
-	CardTotal = CountTotal();
-
-	if (Cards.size() == 2 && Cards[0].Symbol == Cards[1].Symbol)
-		CanSplit = true;
-
-	if (CardTotal == 21) State = PlayerState::Blackjack;
-	else if (CardTotal > 21) State = PlayerState::Bust;
-	else State = PlayerState::Normal;
-
-	PrintChips();
-	PrintCards();
-	PrintAction(action);
-	Pause();
 }

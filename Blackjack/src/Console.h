@@ -32,7 +32,8 @@ enum class ClearType
 	Right,
 	Left,
 	EndOfLine,
-	EndOfScreen
+	EndOfScreen,
+	Color
 };
 
 enum class CursorDirection
@@ -62,6 +63,19 @@ enum class TableCharacter
 	RightEdge
 };
 
+enum class GroundType
+{
+	Fore,
+	Back
+};
+
+struct Color
+{
+	int R;
+	int G;
+	int B;
+};
+
 void PrintXY(const std::string& string, int x, int y);
 
 std::string Repeat(char character, int repeats);
@@ -78,28 +92,24 @@ std::string Reverse(const std::string& string);
 
 void ChangeColor(ConsoleColor color);
 
-/// <summary>
-/// Moves the cursor position to the coordinates given.
-/// </summary>
-/// <param name="x">The x coordinate.</param>
-/// <param name="y">The y coordinate.</param>
+void ResetColor();
+
+void SwapColors();
+
+std::string ChangeColor(Color color, GroundType type = GroundType::Fore);
+
+std::string ChangeColor(const std::string& string, Color color, GroundType type = GroundType::Fore);
+
+void SetColor(Color color, GroundType type = GroundType::Fore);
+
 COORD XY(short x, short y);
 
 COORD XY(COORD c);
 
 COORD XY();
 
-/// <summary>
-/// Moves the cursor based on the <paramref name="direction"/> that <paramref name="amount"/> of times.
-/// </summary>
-/// <param name="direction">The direction where the cursor will move.</param>
-/// <param name="amount">The distance the cursor should move to. Defaults to 1.</param>
 COORD MoveCursor(CursorDirection direction, short amount = 1);
 
-/// <summary>
-/// Clears the text in the console based on the type.
-/// </summary>
-/// <param name="type">The kind of clear that will happen. Defaults to <c>Screen</c>.</param>
 void Clear(ClearType type = ClearType::Screen);
 
 COORD WriteLine(const std::string& string);
@@ -108,4 +118,4 @@ void SetConsoleMode(int mode);
 
 void Pause();
 
-void cinReset();
+void CinReset();

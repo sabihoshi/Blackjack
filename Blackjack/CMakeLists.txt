@@ -8,4 +8,7 @@ add_executable(Blackjack
         src/Card.cpp src/Card.h
         src/Table.cpp src/Table.h
         src/Console.cpp src/Console.h
-        src/Dealer.cpp src/Dealer.h src/Player.cpp src/Player.h)
+        src/Dealer.cpp src/Dealer.h
+        src/Player.cpp src/Player.h
+        src/Hand.cpp src/Hand.h
+        src/Game.cpp src/Game.h)

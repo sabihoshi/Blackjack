@@ -1,34 +1,55 @@
 #include "Dealer.h"
 
+#include <algorithm>
+#include <random>
+
+/**
+ * \brief Pulls a Card from the deck.
+ * \param isHidden Whether the card is hidden.
+ * \return A Card that was pulled.
+ */
 Card Dealer::Pull(const bool isHidden)
 {
 	auto card = Deck.front();
 	card.IsHidden = isHidden;
-
 	Deck.pop_front();
 
 	return card;
 }
 
-Card Dealer::Hit(const bool isHidden)
+/**
+ * \brief Adds a standard 52 deck.
+ * \param decks The amount of decks to add.
+ */
+void Dealer::AddDeck(const int decks)
 {
-	return Hit(*this, isHidden);
+	for (int i = 0; i < decks; ++i)
+	{
+		for (int suit = 0; suit < 4; ++suit)
+		{
+			for (int rank = 0; rank < 13; ++rank)
+			{
+				Deck.emplace_back(
+					static_cast<CardRank>(rank),
+					static_cast<CardSuit>(suit)
+				);
+			}
+		}
+	}
 }
 
-Card Dealer::Hit(Player& player, const bool isHidden)
+/**
+ * \brief Shuffles the deck.
+ */
+void Dealer::ShuffleDeck()
 {
-	const auto card = Pull(isHidden);
-	player.Cards.push_back(card);
-
-	if (card.Symbol == CardSymbol::Ace)
-		player.HasAce = true;
-
-	player.UpdateState(GameAction::Hit);
-
-	return card;
+	std::shuffle(Deck.begin(), Deck.end(), std::mt19937(std::random_device()()));
 }
 
-Dealer::Dealer() : Player(CursorDirection::Left)
+/**
+ * \brief The default constructor for the dealer.
+ */
+Dealer::Dealer() : Player("Dealer", CursorDirection::Left)
 {
 	Name = "Dealer";
 	CardsXY = {103, 6};
@@ -36,19 +57,16 @@ Dealer::Dealer() : Player(CursorDirection::Left)
 	PromptXY = {65, 18};
 }
 
+/**
+ * \brief Determines what the next action of the dealer.
+ * \return The GameAction which is the next action of the dealer.
+ */
 GameAction Dealer::NextAction() const
 {
-	if (Cards[1].IsHidden)
+	if (FirstHand.Cards.size() == 2 && FirstHand.Cards.back().IsHidden)
 		return GameAction::Reveal;
 
-	if (CardTotal > 17)
-		return GameAction::Stand;
-
-	return GameAction::Hit;
-}
-
-void Dealer::Reveal()
-{
-	Cards[1].IsHidden = false;
-	UpdateState(GameAction::Reveal);
+	return FirstHand.CountTotal() >= 17
+		? GameAction::Stand
+		: GameAction::Hit;
 }
