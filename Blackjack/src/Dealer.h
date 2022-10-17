@@ -1,6 +1,7 @@
 #pragma once
 
 #include <queue>
+
 #include "Card.h"
 #include "Player.h"
 
@@ -9,15 +10,13 @@ class Dealer : public Player
 public:
 	Dealer();
 
-	Card Hit(Player& player, bool isHidden = false);
+	void AddDeck(int decks);
 
-	Card Hit(bool isHidden = false);
-
-	void Reveal();
-
-	Card Pull(bool isHidden = false);
+	void ShuffleDeck();
 
 	std::deque<Card> Deck;
 
 	GameAction NextAction() const;
+
+	Card Pull(bool isHidden = false);
 };

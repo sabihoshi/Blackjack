@@ -1,14 +1,17 @@
 #pragma once
 
 #include <vector>
+
 #include "Card.h"
 #include "Console.h"
 #include "Player.h"
 
-const int DEFAULT_WIDTH = 120;
-const int DEFAULT_HEIGHT = 30;
+constexpr int DEFAULT_WIDTH = 120;
+constexpr int DEFAULT_HEIGHT = 30;
+constexpr int MAX_CARDS = 4;
+constexpr int MAX_WIDTH = MAX_CARDS * Card::CARD_WIDTH;
 
-void PrintTable(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT);
+void PrintTable();
 
 void PrintCards(Card cards[], int offset);
 
@@ -19,7 +22,7 @@ void PrintCards(const Player& player);
 void PrintStatus(const std::string& status);
 
 template <typename T>
-T PromptStatus(const std::string& prompt)
+T Prompt(const std::string& prompt)
 {
 	XY(31, 26);
 	std::cout << Center(prompt, 60);

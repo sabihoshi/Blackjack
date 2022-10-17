@@ -23,15 +23,27 @@
     <ClCompile Include="src\Card.cpp" />
     <ClCompile Include="src\Console.cpp" />
     <ClCompile Include="src\Dealer.cpp" />
+    <ClCompile Include="src\Game.cpp" />
+    <ClCompile Include="src\Hand.cpp" />
+    <ClCompile Include="src\MainMenu.cpp" />
     <ClCompile Include="src\Player.cpp" />
     <ClCompile Include="src\Table.cpp" />
+    <ClCompile Include="src\User.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Card.h" />
     <ClInclude Include="src\Console.h" />
     <ClInclude Include="src\Dealer.h" />
+    <ClInclude Include="src\Game.h" />
+    <ClInclude Include="src\Hand.h" />
+    <ClInclude Include="src\lib\json.hpp" />
+    <ClInclude Include="src\MainMenu.h" />
     <ClInclude Include="src\Player.h" />
     <ClInclude Include="src\Table.h" />
+    <ClInclude Include="src\User.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="logins.json" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

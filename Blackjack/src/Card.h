@@ -1,9 +1,10 @@
 ﻿#pragma once
 
-#include <iostream>
 #include <string>
 
-enum class CardSymbol
+#include "Console.h"
+
+enum class CardRank
 {
 	Ace,
 	Two,
@@ -31,23 +32,23 @@ enum class CardSuit
 class Card
 {
 public:
-	Card(CardSymbol symbol, CardSuit suit);
+	Card(CardRank rank, CardSuit suit);
 
-	static const int CARD_WIDTH = 13;
-	static const int CARD_HEIGHT = 8;
-
-	static Card Random();
+	static constexpr int CARD_WIDTH = 13;
+	static constexpr int CARD_HEIGHT = 9;
 
 	void PrintCard() const;
 
 	bool IsHidden = false;
 	int Value = 0;
-	CardSymbol Symbol;
+	CardRank Rank;
 	CardSuit Suit;
 private:
-	static std::string SymbolString(CardSymbol symbol);
+	std::string RankString() const;
 
-	static std::string SuitString(CardSuit suit);
+	std::string SuitString() const;
 
-	static int SymbolValue(CardSymbol symbol);
+	int RankValue() const;
+
+	Color GetColor() const;
 };
